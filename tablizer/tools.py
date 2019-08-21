@@ -7,7 +7,33 @@ import numpy as np
 import os
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime
-from tablizer.defaults import Units, Items
+from tablizer.defaults import Units, Fields
+
+def make_cnx_string(location, database):
+    '''
+    Make a connection string for sqlalchemy for either sql or sqlite.
+
+    Args
+    ------
+    location : str
+    database : str, either 'sql' or 'sqlite'
+
+    Returns
+    ------
+    location : str, amended location string for sqlalchemy
+
+    '''
+
+    if database not in ['sql','sqlite']:
+        raise Exception('database must be "sql" or "sqlite"')
+
+    if database == 'sqlite':
+        location = 'sqlite:///' + location
+
+    if database == 'sql':
+        location = 'mysql+mysqlconnector://' + location
+
+    return location
 
 def make_session(location):
     '''
@@ -23,23 +49,16 @@ def make_session(location):
 
     '''
 
-    ext = os.path.splitext(location)[1]
-
-    if ext == '.db':
-        location = 'sqlite:///' + location
-
-    else:
-        print('In make_session(), only configured for .db!!!')
-
     try:
         engine = create_engine(location)
         Base.metadata.create_all(engine)
-        DBSession = sessionmaker(bind=engine)
-        session = DBSession()
 
     except:
         raise Exception('Failed to make database connection with '
                         '{}'.format(location))
+
+    DBSession = sessionmaker(bind=engine)
+    session = DBSession()
 
     return session
 
@@ -53,7 +72,6 @@ def create_sqlite_database(location):
 
     '''
 
-    location = 'sqlite:///' + location
     engine = create_engine(location)
     Base.metadata.create_all(engine)
 
@@ -72,7 +90,7 @@ def check_inputs_table(location):
     '''
 
     flag = False
-    location = 'sqlite:///' + location
+
     engine = create_engine(location)
 
     if engine.dialect.has_table(engine,'Inputs'):
@@ -99,7 +117,7 @@ def insert(location, table, values):
 
     '''
 
-    fields = Items.items.keys()
+    fields = Fields.fields.keys()
 
     # check values
     for k in fields:

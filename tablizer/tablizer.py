@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 
-from tablizer.inputs import Inputs, Base
-from tablizer.defaults import Units, Methods, Items
-from tablizer.tools import create_sqlite_database, check_inputs_table, insert, make_session, check_existing_records, delete_records
 import os
+from sys import exit
 import numpy as np
 import pandas as pd
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from tablizer.inputs import Inputs, Base
+from tablizer.defaults import Units, Methods, Items
+from tablizer.tools import create_sqlite_database, check_inputs_table, insert, \
+        make_session, check_existing_records, delete_records, make_cnx_string
 
 def calculate(input, date, methods, percentiles = [25,75], decimals = 3):
     '''
@@ -43,7 +45,6 @@ def calculate(input, date, methods, percentiles = [25,75], decimals = 3):
 
     try:
         date_time = pd.to_datetime(date)
-
     except:
         raise Exception('unable to parse {} with pd.to_datetime()'.format(date))
 
@@ -86,13 +87,16 @@ def calculate(input, date, methods, percentiles = [25,75], decimals = 3):
 
     return result
 
-def get_existing_records(location, query_dict = None):
+def get_existing_records(location, database, query_dict = None):
     '''
     Get existing database records.
 
     Args
     ------
     location : str
+        mysql database example: user:pwd@host/database
+        sqlite database example: /<path>/database.db
+    database : str, options are 'sql' or 'sqlite'
     query_dict : dict, if None default will be
         {'Inputs':['run_id','run_name','basin_id']}
         For existing database records will query {table:['field1','field2']}
@@ -103,8 +107,13 @@ def get_existing_records(location, query_dict = None):
 
     '''
 
+    if database not in ['sql','sqlite']:
+        raise Exception('database must be "sql" or "sqlite"')
+
     if query_dict is None:
         query_dict = {'Inputs':['run_id','run_name','basin_id']}
+
+    location = make_cnx_string(location, database)
 
     session = make_session(location)
 
@@ -118,25 +127,23 @@ def get_existing_records(location, query_dict = None):
 
     return results
 
-def store(values, variable, location, run_name, basin_id, run_id, date_time,
-          overwrite = True, credentials = None, units = None):
+def store(values, variable, database, location, run_name, basin_id, run_id,
+          date_time, overwrite = True, units = None):
     '''
-
-    pd.Timestamp(np.datetime64(values.index.values[0])).to_pydatetime()
 
     Args
     ------
     values : pd.DataFrame, index = date_time, columns = methods
     variable : str ('air_temp')
+    database : str, options are 'sql' or 'sqlite'
     location : str
-        mysql database: user:pwd@host:port/database
+        mysql database: user:pwd@host/database
         sqlite database: /<path>/database.db
     run_name : str
+    basin_id : int
     run_id : int
     date_time : datetime
-    basin_id : int
     overwrite : bool, overwrite existing records if they exist
-    credentials : dict {'user':username,'pwd':pwd} if using mysql
     units : dict, default supplied by defaults.py, check there for format
 
     '''
@@ -152,34 +159,26 @@ def store(values, variable, location, run_name, basin_id, run_id, date_time,
     if type(values) != pd.core.frame.DataFrame:
         raise Exception('values must be pandas.DataFrame')
 
-    # very basic location check
-    ext = os.path.splitext(location)[1]
-
-    if ext not in ['.db', '']:
-        raise Exception('location string not valid')
-
-    if units is None:
-        units = Units.units
+    if database not in ['sql','sqlite']:
+        raise Exception('database must be "sql" or "sqlite"')
 
     if type(run_name) != str:
         raise Exception('run_name must be type string')
 
     if type(run_id) != int:
-        try:
-            run_id = int(run_id)
-        except:
-            raise Exception('run_id must be type int')
+        raise Exception('run_id must be type int')
 
     if type(basin_id) != int:
-        try:
-            basin_id = int(basin_id)
-        except:
-            raise Exception('basin_id must be type int')
+        raise Exception('basin_id must be type int')
 
-    items = Items.items
+    if units is None:
+        units = Units.units
 
-    # save to sqlite database
-    if ext == '.db':
+    location = make_cnx_string(location, database)
+
+    fields = Fields.Fields
+
+    if database == 'sqlite':
 
         # create if it doesn't exist
         if not os.path.isfile(location):
@@ -189,7 +188,8 @@ def store(values, variable, location, run_name, basin_id, run_id, date_time,
         flag = check_inputs_table(location)
 
         if not flag:
-            print('create table here')
+            print('Inputs table does not exist...')
+            exit()
 
         date = pd.Timestamp(np.datetime64(values.index.values[0])).to_pydatetime()
 
@@ -199,24 +199,45 @@ def store(values, variable, location, run_name, basin_id, run_id, date_time,
             delete_records(location, run_name, basin_id, date, variable)
 
         for v in values:
-            items['run_id'] = run_id
-            items['basin_id'] = basin_id
-            items['run_name'] = run_name
-            items['date_time'] = date_time
-            items['variable'] = variable
-            items['function'] = v
-            items['value'] = values[v].values
-            items['unit'] = units[variable]
+            fields['run_id'] = run_id
+            fields['basin_id'] = basin_id
+            fields['run_name'] = run_name
+            fields['date_time'] = date_time
+            fields['variable'] = variable
+            fields['function'] = v
+            fields['value'] = values[v].values
+            fields['unit'] = units[variable]
 
-            insert(location, 'Inputs', items)
+            insert(location, 'Inputs', fields)
 
         return
 
-    # if mysql:
-    #       # check credentials
-    #
-    #       # check table
-    #
-    #       # place results
-    #
-    #     return
+    if database == 'sql':
+
+        # check if inputs table exists
+        flag = check_inputs_table(location)
+
+        if not flag:
+            print('Inputs table does not exist...')
+            exit()
+
+        # date = pd.Timestamp(np.datetime64(values.index.values[0])).to_pydatetime()
+        #
+        # flag = check_existing_records(location, run_name, basin_id, date, variable)
+        #
+        # if overwrite and flag:
+        #     delete_records(location, run_name, basin_id, date, variable)
+        #
+        # for v in values:
+        #     fields['run_id'] = run_id
+        #     fields['basin_id'] = basin_id
+        #     fields['run_name'] = run_name
+        #     fields['date_time'] = date_time
+        #     fields['variable'] = variable
+        #     fields['function'] = v
+        #     fields['value'] = values[v].values
+        #     fields['unit'] = units[variable]
+        #
+        #     insert(location, 'Inputs', fields)
+
+        return

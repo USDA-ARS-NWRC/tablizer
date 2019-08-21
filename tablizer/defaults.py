@@ -14,8 +14,8 @@ class Methods():
     options = ['nanmean','nanmin','nanmax','nanstd','nanpercentile', 'nanstd',
                'mean','min','max','std','percentile', 'median', 'nanmedian']
 
-class Items():
-    items = {'run_id': '',
+class Fields():
+    fields = {'run_id': '',
              'basin_id': '',
              'run_name': '',
              'date_time': '',

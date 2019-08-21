@@ -19,5 +19,3 @@ class Inputs(Base):
     function = Column(String(250), nullable=False)
     value = Column(types.Float(), nullable=False)
     unit = Column(String(250), nullable=True)
-
-    # Add relationships ?
