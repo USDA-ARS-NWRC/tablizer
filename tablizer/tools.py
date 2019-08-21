@@ -128,13 +128,13 @@ def insert(location, table, values):
 
     for val in values['value']:
 
-        output = {'run_id': values['run_id'],
+        output = {'run_id': int(values['run_id']),
                   'run_name': values['run_name'],
-                  'basin_id': values['basin_id'],
+                  'basin_id': int(values['basin_id']),
                   'date_time': values['date_time'],
                   'variable': values['variable'],
                   'function':values['function'],
-                  'value': val,
+                  'value': float(val),
                   'unit': values['unit']}
 
         dbtable = getattr(tablizer.inputs, table)

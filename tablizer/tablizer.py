@@ -7,7 +7,7 @@ import pandas as pd
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from tablizer.inputs import Inputs, Base
-from tablizer.defaults import Units, Methods, Items
+from tablizer.defaults import Units, Methods, Fields
 from tablizer.tools import create_sqlite_database, check_inputs_table, insert, \
         make_session, check_existing_records, delete_records, make_cnx_string
 
@@ -176,7 +176,7 @@ def store(values, variable, database, location, run_name, basin_id, run_id,
 
     location = make_cnx_string(location, database)
 
-    fields = Fields.Fields
+    fields = Fields.fields
 
     if database == 'sqlite':
 
@@ -221,23 +221,23 @@ def store(values, variable, database, location, run_name, basin_id, run_id,
             print('Inputs table does not exist...')
             exit()
 
-        # date = pd.Timestamp(np.datetime64(values.index.values[0])).to_pydatetime()
-        #
-        # flag = check_existing_records(location, run_name, basin_id, date, variable)
-        #
-        # if overwrite and flag:
-        #     delete_records(location, run_name, basin_id, date, variable)
-        #
-        # for v in values:
-        #     fields['run_id'] = run_id
-        #     fields['basin_id'] = basin_id
-        #     fields['run_name'] = run_name
-        #     fields['date_time'] = date_time
-        #     fields['variable'] = variable
-        #     fields['function'] = v
-        #     fields['value'] = values[v].values
-        #     fields['unit'] = units[variable]
-        #
-        #     insert(location, 'Inputs', fields)
+        date = pd.Timestamp(np.datetime64(values.index.values[0])).to_pydatetime()
+
+        flag = check_existing_records(location, run_name, basin_id, date, variable)
+
+        if overwrite and flag:
+            delete_records(location, run_name, basin_id, date, variable)
+
+        for v in values:
+            fields['run_id'] = run_id
+            fields['basin_id'] = basin_id
+            fields['run_name'] = run_name
+            fields['date_time'] = date_time
+            fields['variable'] = variable
+            fields['function'] = v
+            fields['value'] = values[v].values
+            fields['unit'] = units[variable]
+
+            insert(location, 'Inputs', fields)
 
         return

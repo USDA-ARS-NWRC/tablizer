@@ -29,29 +29,42 @@ Features
 Example use:
 
 ```
+
 from tablizer.tablizer import calculate, store, get_existing_records
 from tablizer.inputs import Inputs
 import numpy as np
 import pandas as pd
+import netCDF4 as nc
 
-# initialize
-array = np.array([[1,1,1,1], [np.nan,2,3,6]])
-location  = '/<path>/tablizer.db'
-methods = ['nanmean','nanmax','nanstd','nanpercentile']
 value = 'air_temp'
-date = pd.to_datetime('2019-8-18 23:00')
+input_path = '/data/albedo/tuolumne/ops/wy2019/ops/data/data20181001/smrfOutputs/air_temp.nc'
+database = 'sqlite'
+location  = '/home/markrobertson/wkspace/tablizer.db'
+methods = ['mean','max','std','percentile']
 run_name = 'test'
 basin_id = 1
 run_id = 1
 
-# calculate results
-results = calculate(array, date, methods)
+# get input data
+ncf = nc.Dataset(input_path)
+arrays = ncf[value][:]
+dates = ncf.variables['time'][:]
+date_units = ncf.variables['time'].units
+ncf.close()
 
-# put on database
-store(results, value, location, run_name, basin_id, run_id, date)
 
-# get existing records
-records = get_existing_records(location)
+for n in range(0,len(arrays[:,0,0])):
+    date = nc.num2date(dates[n],date_units)
+    array = arrays[n,:,:]
+
+    # calculate simple statistics
+    results = calculate(array, date, methods)
+
+    # put on database
+    store(results, value, database, location, run_name, basin_id, run_id, date)
+
+# to get existing records
+records = get_existing_records(location, database)
 
 ```
 
