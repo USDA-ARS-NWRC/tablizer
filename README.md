@@ -1,30 +1,7 @@
-========
-Tablizer
-========
 
+## Tablizer
 
-.. image:: https://img.shields.io/pypi/v/tablizer.svg
-        :target: https://pypi.python.org/pypi/tablizer
-
-.. image:: https://img.shields.io/travis/robertson-mark/tablizer.svg
-        :target: https://travis-ci.org/robertson-mark/tablizer
-
-.. image:: https://readthedocs.org/projects/tablizer/badge/?version=latest
-        :target: https://tablizer.readthedocs.io/en/latest/?badge=latest
-        :alt: Documentation Status
-
-
-
-
-Simple statistical summaries on DataFrames and arrays to SQL or sqlite database.
-
-
-* Free software: CC0 1.0
-* Documentation: https://tablizer.readthedocs.io.
-
-
-Features
---------
+###  Features
 
 Example use:
 
@@ -54,13 +31,3 @@ store(results, value, location, run_name, basin_id, run_id, date)
 records = get_existing_records(location)
 
 ```
-
-* TODO
-
-Credits
--------
-
-This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypackage`_ project template.
-
-.. _Cookiecutter: https://github.com/audreyr/cookiecutter
-.. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage
