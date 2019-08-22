@@ -120,8 +120,7 @@ def get_existing_records(location, database, query_dict = None):
     results = {}
     for k in query_dict.keys():
         qry = session.query(Inputs)
-        df = pd.read_sql(qry.statement, qry.session.connection())
-        results[k] = df
+        results = pd.read_sql(qry.statement, qry.session.connection())
 
     session.close()
 
