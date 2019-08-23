@@ -4,4 +4,4 @@
 
 __author__ = """Mark Robertson"""
 __email__ = 'mark.robertson@usda.gov'
-__version__ = '0.1.1'
+__version__ = '0.1.2'
