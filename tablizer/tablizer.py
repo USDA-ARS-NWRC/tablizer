@@ -11,7 +11,8 @@ from tablizer.defaults import Units, Methods, Fields
 from tablizer.tools import create_sqlite_database, check_inputs_table, insert, \
         make_session, check_existing_records, delete_records, make_cnx_string
 
-def calculate(input, date, methods, percentiles = [25,75], decimals = 3):
+def summarize(input, date, methods, percentiles = [25,75], decimals = 3,
+              masks = None):
     '''
     Calculate basic summary statistics for 2D arrays or DataFrames.
 
@@ -22,6 +23,7 @@ def calculate(input, date, methods, percentiles = [25,75], decimals = 3):
     methods : list (['mean','std']), strings of numpy functions to apply
     percentiles : list ([low, high]), must supply when using 'percentile'
     decimals : int
+    masks :
 
     Returns
     ------
@@ -70,61 +72,45 @@ def calculate(input, date, methods, percentiles = [25,75], decimals = 3):
 
     result = pd.DataFrame(index = [date_time], columns = cols)
 
+    if masks is not None:
+        if type(masks) != list:
+            masks = [masks]
+
+        for idx, mask in enumerate(masks):
+
+            if mask.shape != input.shape:
+                raise Exception('mask {}, {} and array {} do not '
+                                'match'.format(idx, mask.shape, input.shape))
+
+            mask = mask.astype('float')
+            mask[mask < 1] = np.nan
+            input = input * mask
+
     for col, method in zip(cols, methods):
 
         if 'percentile' in method:
             c1 = '{}_{}'.format(method,str(percentiles[0]))
             c2 = '{}_{}'.format(method,str(percentiles[1]))
             v = getattr(np, method)(input,[percentiles[0],percentiles[1]])
-            v = v.round(decimals)
-            result.loc[date_time,c1] = v[0]
-            result.loc[date_time,c2] = v[1]
+
+            if not np.isnan(v).any():
+                v = v.round(decimals)
+                result.loc[date_time,c1] = v[0]
+                result.loc[date_time,c2] = v[1]
+
+            else:
+                result.loc[date_time,c1] = np.nan
+                result.loc[date_time,c2] = np.nan
 
         else:
             v = getattr(np, method)(input)
-            v = v.round(decimals)
-            result.loc[date_time,col] = v
+
+            if not np.isnan(v):
+                v = v.round(decimals)
+                result.loc[date_time,col] = v
 
     return result
 
-def get_existing_records(location, database, query_dict = None):
-    '''
-    Get existing database records.
-
-    Args
-    ------
-    location : str
-        mysql database example: user:pwd@host/database
-        sqlite database example: /<path>/database.db
-    database : str, options are 'sql' or 'sqlite'
-    query_dict : dict, if None default will be
-        {'Inputs':['run_id','run_name','basin_id']}
-        For existing database records will query {table:['field1','field2']}
-
-    Returns
-    ------
-    results : dict {field:value}
-
-    '''
-
-    if database not in ['sql','sqlite']:
-        raise Exception('database must be "sql" or "sqlite"')
-
-    if query_dict is None:
-        query_dict = {'Inputs':['run_id','run_name','basin_id']}
-
-    location = make_cnx_string(location, database)
-
-    session = make_session(location)
-
-    results = {}
-    for k in query_dict.keys():
-        qry = session.query(Inputs)
-        results = pd.read_sql(qry.statement, qry.session.connection())
-
-    session.close()
-
-    return results
 
 def store(values, variable, database, location, run_name, basin_id, run_id,
           date_time, overwrite = True, units = None):
@@ -139,7 +125,7 @@ def store(values, variable, database, location, run_name, basin_id, run_id,
         mysql database: user:pwd@host/database
         sqlite database: /<path>/database.db
     run_name : str
-    basin_id : int
+    basin_id : dict
     run_id : int
     date_time : datetime
     overwrite : bool, overwrite existing records if they exist
@@ -147,14 +133,12 @@ def store(values, variable, database, location, run_name, basin_id, run_id,
 
     '''
 
-    # check variable
     if type(variable) != str:
         raise Exception('id must be type string')
 
     if len(variable) > 30:
         raise Exception('id string must be < 30 characters')
 
-    # check values
     if type(values) != pd.core.frame.DataFrame:
         raise Exception('values must be pandas.DataFrame')
 
@@ -177,9 +161,9 @@ def store(values, variable, database, location, run_name, basin_id, run_id,
 
     fields = Fields.fields
 
+    # create if it doesn't exist
     if database == 'sqlite':
 
-        # create if it doesn't exist
         if not os.path.isfile(location):
             create_sqlite_database(location)
 
@@ -239,4 +223,40 @@ def store(values, variable, database, location, run_name, basin_id, run_id,
 
             insert(location, 'Inputs', fields)
 
-        return
+def get_existing_records(location, database, query_dict = None):
+    '''
+    Get existing database records.
+
+    Args
+    ------
+    location : str
+        mysql database example: user:pwd@host/database
+        sqlite database example: /<path>/database.db
+    database : str, options are 'sql' or 'sqlite'
+    query_dict : dict, if None default will be
+        {'Inputs':['run_id','run_name','basin_id']}
+        For existing database records will query {table:['field1','field2']}
+
+    Returns
+    ------
+    results : dict {field:value}
+
+    '''
+
+    if database not in ['sql','sqlite']:
+        raise Exception('database must be "sql" or "sqlite"')
+
+    if query_dict is None:
+        query_dict = {'Inputs':['run_id','run_name','basin_id']}
+
+    location = make_cnx_string(location, database)
+
+    session = make_session(location)
+
+    for k in query_dict.keys():
+        qry = session.query(Inputs)
+        results = pd.read_sql(qry.statement, qry.session.connection())
+
+    session.close()
+
+    return results

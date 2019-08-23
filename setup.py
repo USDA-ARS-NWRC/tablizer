@@ -5,7 +5,7 @@
 
 from setuptools import setup, find_packages
 
-with open('README.md') as readme_file:
+with open('README.rst') as readme_file:
     readme = readme_file.read()
 
 with open('HISTORY.rst') as history_file:
@@ -24,8 +24,6 @@ setup(
         'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Developers',
         'Natural Language :: English',
-        "Programming Language :: Python :: 2",
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
@@ -34,7 +32,7 @@ setup(
     ],
     description="Summarizes DataFrames and 2D arrays to database or csv.",
     install_requires=requirements,
-    long_description=readme + '\n\n' + history,
+    # long_description=readme + '\n\n' + history,
     include_package_data=True,
     keywords='tablizer',
     name='tablizer',
@@ -43,6 +41,6 @@ setup(
     test_suite='tests',
     tests_require=test_requirements,
     url='https://github.com/robertson-mark/tablizer',
-    version='0.1.0',
+    version='0.1.2',
     zip_safe=False,
 )

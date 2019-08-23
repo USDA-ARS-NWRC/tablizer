@@ -28,10 +28,12 @@ def make_cnx_string(location, database):
         raise Exception('database must be "sql" or "sqlite"')
 
     if database == 'sqlite':
-        location = 'sqlite:///' + location
+        if 'sqlite:///' not in location:
+            location = 'sqlite:///' + location
 
     if database == 'sql':
-        location = 'mysql+mysqlconnector://' + location
+        if 'mysql+mysqlconnector://' not in location:
+            location = 'mysql+mysqlconnector://' + location
 
     return location
 
@@ -128,13 +130,18 @@ def insert(location, table, values):
 
     for val in values['value']:
 
+        if np.isnan(val):
+            val = None
+        else:
+            val = float(val)
+
         output = {'run_id': int(values['run_id']),
                   'run_name': values['run_name'],
                   'basin_id': int(values['basin_id']),
                   'date_time': values['date_time'],
                   'variable': values['variable'],
                   'function':values['function'],
-                  'value': float(val),
+                  'value': val,
                   'unit': values['unit']}
 
         dbtable = getattr(tablizer.inputs, table)
