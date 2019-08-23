@@ -17,5 +17,5 @@ class Inputs(Base):
     date_time = Column(types.DateTime(), nullable=False, index=True)
     variable = Column(String(250), nullable=False)
     function = Column(String(250), nullable=False)
-    value = Column(types.Float(), nullable=False)
+    value = Column(types.Float(), nullable=True)
     unit = Column(String(250), nullable=True)
