@@ -1,11 +1,14 @@
+=====
+Tablizer
+=====
 
-## Tablizer
-
-###  Features
+=====
+Features
+=====
 
 Example use:
 
-```
+.. code :: python
 from tablizer.tablizer import calculate, store, get_existing_records
 from tablizer.inputs import Inputs
 import numpy as np
@@ -29,5 +32,3 @@ store(results, value, location, run_name, basin_id, run_id, date)
 
 # get existing records
 records = get_existing_records(location)
-
-```
