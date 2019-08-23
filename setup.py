@@ -32,7 +32,7 @@ setup(
     ],
     description="Summarizes DataFrames and 2D arrays to database or csv.",
     install_requires=requirements,
-    long_description=readme + '\n\n' + history,
+    # long_description=readme + '\n\n' + history,
     include_package_data=True,
     keywords='tablizer',
     name='tablizer',
