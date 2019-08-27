@@ -6,6 +6,7 @@ class Units():
              'percent_snow': '%',
              'precip': 'mm',
              'snow_density': 'kg/m^3',
+             'storm_days': 'day',
              'thermal': 'W/m^2',
              'vapor_pressure': 'pascal',
              'wind_speed': 'm/s^2'}
