@@ -11,7 +11,10 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-requirements = [ ]
+with open('requirements.txt') as f:
+    required = f.read().splitlines()
+
+# requirements = [ ]
 
 setup_requirements = [ ]
 
@@ -31,7 +34,7 @@ setup(
         'Programming Language :: Python :: 3.7',
     ],
     description="Summarizes DataFrames and 2D arrays to database or csv.",
-    install_requires=requirements,
+    install_requires=required,
     # long_description=readme + '\n\n' + history,
     include_package_data=True,
     keywords='tablizer',
