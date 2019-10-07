@@ -171,8 +171,8 @@ def store(values, variable, database, location, run_name, basin_id, run_id,
         flag = check_inputs_table(location)
 
         if not flag:
-            print('Inputs table does not exist...')
-            exit()
+            engine = create_engine(location)
+            Base.metadata.create_all(engine, tables=[Inputs.__table__])
 
         date = pd.Timestamp(np.datetime64(values.index.values[0])).to_pydatetime()
 
@@ -201,8 +201,8 @@ def store(values, variable, database, location, run_name, basin_id, run_id,
         flag = check_inputs_table(location)
 
         if not flag:
-            print('Inputs table does not exist...')
-            exit()
+            engine = create_engine(location)
+            Base.metadata.create_all(engine, tables=[Inputs.__table__])
 
         date = pd.Timestamp(np.datetime64(values.index.values[0])).to_pydatetime()
 
