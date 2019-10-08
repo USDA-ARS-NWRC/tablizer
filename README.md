@@ -1,4 +1,7 @@
 ## Tablizer
+[![GitHub version](https://badge.fury.io/gh/USDA-ARS-NWRC%2Ftablizer.svg)](https://badge.fury.io/gh/USDA-ARS-NWRC%2Ftablizer)
+[![Build Status](https://travis-ci.org/USDA-ARS-NWRC/tablizer.svg?branch=devel)](https://travis-ci.org/USDA-ARS-NWRC/tablizer)
+
 Tablizer calculates simple summary statistics for 2D arrays, and stores those results in a database.
 
 #### Example Use
