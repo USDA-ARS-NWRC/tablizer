@@ -102,4 +102,4 @@ ENV/
 .mypy_cache/
 
 tests/tablizer_test.db
-
+.idea/
